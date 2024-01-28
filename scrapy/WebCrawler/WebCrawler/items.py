@@ -5,8 +5,7 @@
 
 import scrapy
 
-
-class ClassementFfckItem(scrapy.Item):
+class athlete(scrapy.Item):
     Rank = scrapy.Field()
     Scratch = scrapy.Field()
     Name = scrapy.Field()

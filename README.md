@@ -39,7 +39,7 @@ C'est un site dynamique, les textes sont générés avec du Javascript donc nous
 
 https://sites.google.com/chromium.org/driver/downloads?authuser=0
 
-#### Lancement du scraping : 
+##### Lancement du scraping : 
 
 Ouvrez le fichier config.ini dans un éditeur de texte et faire correspondre les chemins pour le navigateur Chrome ('binary_path') et le Webdriver ('path') et enregistrez le.
 
@@ -54,10 +54,66 @@ nbr_data = nombre de data à récupérer, 100 permet de faire vite
 Nous pouvons maintenant executer notre application en effectuant la commande : 
 ```python main.py```
 
-### Option B Scrapy sur un site statique
+#### Option B Scrapy sur un site statique
+
+Ainsi nous allons utiliser Scrapy en coordination avec Docker afin de réaliser notre Scraping.
+
+Il nous faut un site statique pour faciliter le processus, miracle l'ancien site de la ffck est toujours
+disponible et est codé avec html/php. Ainsi les balises sont statiques et que donc sont accessible facilement
+vias Scarpy ! 
 
 http://www.ffcanoe.asso.fr/eau_vive/slalom/classement/embarcations/index
 
+De plus nous avons accès à toutes les années précédentes jusqu'à 2010. Pour un temps de récupération et de codage
+nettement réduit.
+
+Nous créons donc notre dossier avec notre framework Scrapy.
+
+<img src="images/architecture.png" alt="architecture" class="align-center" /
+
+Notre framework est articulé avec plusieurs composants qui gèrent chacun un
+rôle différent. Nous allons les détailler.
+
+-   Les **Spiders** : permettent de naviguer sur un site et de
+    référencer les règles d'extraction d la donnée. 
+    Dans notre exemple nous allons passer de pages en pages  pour avoir accès à tous les athlètes :
+    ```
+    # Gérer la pagination
+    next_page = response.css('div.paging a.next::attr(href)').extract_first()
+    if next_page:
+        yield scrapy.Request(url=response.urljoin(next_page), callback=self.parse)
+    ```
+
+    Nous allons aussi défiler d'années en années pour observer leurs évolutions dans le temps: 
+    ```
+    A faire
+    ```
+
+    Il nous suffit d'extraire nos données avec : 
+    ```
+     for row in response.xpath('//table[@cellpadding="0" and @cellspacing="0"]/tr[@class="paire" or @class="impaire"]'):
+            item = ClassementFfckItem()
+            item['Rank'] = row.xpath('td[1]/text()').extract_first()
+            item['Scratch'] = row.xpath('td[2]/text()').extract_first()
+            ...
+    ```
+-   Les **Pipelines** : font le lien entre la donnée brute et des objets structurés. 
+    Dans notre exemple nous créons simplement une classe ppour créér l'objet athlète : 
+    ```
+    class athlete(scrapy.Item):
+        Rank = scrapy.Field()
+        Scratch = scrapy.Field()
+        Name = scrapy.Field()
+    ```
+
+-   Les **Middlewares** : permettent d'effectuer des transformations sur
+    les objets ou sur les requêtes exécutées par l'engine.
+    Dans notre exemple
+-   Le **Scheduler** : gère l'ordre et le timing des requêtes
+    effectuées.
+
+
+__C:\Users\paulc\Documents\Esiee_Paris\E4\dataengineering\ffck\scrapy\WebCrawler> scrapy crawl classement_ffck -o output.csv__
 
 Consignes
 - Vous devez scraper des données sur le site web de votre choix
