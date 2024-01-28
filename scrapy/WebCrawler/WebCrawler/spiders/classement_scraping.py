@@ -22,6 +22,7 @@ class ClassementFfckSpider(scrapy.Spider):
             item['Courses_Nat'] = row.xpath('td[12]/text()').extract_first()
 
             yield item
+            
         # Gérer la pagination
         next_page = response.css('div.paging a.next::attr(href)').extract_first()
         if next_page:
