@@ -13,7 +13,7 @@ class ClassementFfckSpider(scrapy.Spider):
             item = athlete()
             item['Rank'] = row.xpath('td[1]/text()').extract_first()
             item['Scratch'] = row.xpath('td[2]/text()').extract_first()
-            #item['Name'] = row.xpath('td[3]/a/text()').extract_first()
+            item['Name'] = row.xpath('td[3]/a/text()').extract_first()
             item['Club'] = row.xpath('td[4]/a/text()').extract_first()
             item['Boat'] = row.xpath('td[5]/a/text()').extract_first()
             item['Category'] = row.xpath('td[6]/a/text()').extract_first()

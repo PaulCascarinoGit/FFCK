@@ -163,4 +163,10 @@ Bonus
 
 Nous avons choisi d'utiliser MongoDB car c'est une base donnée basé sur des fichiers .json et que Scrapy donne directement des fichiers en .json.
 
+https://www.youtube.com/watch?v=xBbSR7xU2Yw&ab_channel=Randomcode
 
+```
+ cd .\mongo\
+ docker build -t mongodockerfile -f mongodockerfile .
+ docker run --name mongo_container -d mongodockerfile python3 mongo.py
+```

@@ -1,18 +1,18 @@
-# utilise une image python:3.8  préexistante à partir un autre Dockerfile.
+# Utilisez l'image de base Python 3.11
 FROM python:3.11
 
-# définis le répertoire de travail dans le conteneur
+# Définissez le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# ajoutes les fichier du dossier courant dans le contexte de Docker.
-COPY . .
+# Copiez le fichier requirements.txt du répertoire local vers le répertoire de travail du conteneur
+COPY ./scrapy/requirements.txt /app/requirements.txt
 
-# execution des commandes
-RUN pip install -r /app/requirements.txt
+# Installez les dépendances Python
+RUN pip install --no-cache-dir -r requirements.txt
 
-# définis le répertoire de travail dans le conteneur
+# Copiez tout le contenu du répertoire local dans le répertoire de travail du conteneur
+COPY ./scrapy /app
+
 WORKDIR /app/WebCrawler/WebCrawler/spiders
-
-# déterminer la commande devant être lancée.
-CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.json"]
-
+# Commande par défaut à exécuter lors du démarrage du conteneur
+CMD ["scrapy", "crawl", "classement_ffck"]
