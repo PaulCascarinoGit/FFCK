@@ -115,6 +115,35 @@ rôle différent. Nous allons les détailler.
 
 __C:\Users\paulc\Documents\Esiee_Paris\E4\dataengineering\ffck\scrapy\WebCrawler> scrapy crawl classement_ffck -o output.csv__
 
+##### Lancement du scraping avec scrapy
+
+__Construction de l'image Docker :__
+
+```
+    # utilise une image python:3.8  préexistante à partir un autre Dockerfile.
+    FROM python:3.11
+
+    # définis le répertoire de travail dans le conteneur
+    WORKDIR /app
+
+    # ajoutes les fichier du dossier courant dans le contexte de Docker.
+    COPY . .
+
+    # execution des commandes
+    RUN pip install -r /app/requirements.txt
+
+    # définis le répertoire de travail dans le conteneur
+    WORKDIR /app/WebCrawler/WebCrawler/spiders
+
+    # déterminer la commande devant être lancée.
+    CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.csv"]
+```
+- Se mettre dans le répertoire scrapy : ``` cd scrapy```
+- Construction du docker à partir du dockerfile : ```docker build -t dockerfile .```
+
+__Lancement de l'image Docker :__
+-  Lancement de l'image, création du conteneur```docker run dockerfile```
+
 Consignes
 - Vous devez scraper des données sur le site web de votre choix
 - Stocker ces données dans une BDD
