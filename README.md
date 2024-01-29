@@ -136,7 +136,7 @@ __Construction de l'image Docker :__
     WORKDIR /app/WebCrawler/WebCrawler/spiders
 
     # déterminer la commande devant être lancée.
-    CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.csv"]
+    CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.json"]
 ```
 - Se mettre dans le répertoire scrapy : ``` cd scrapy```
 - Construction du docker à partir du dockerfile : ```docker build -t dockerfile .```
@@ -156,3 +156,11 @@ Bonus
 - Utilisation de docker-compose
 - Scraping en temps réel
 - Moteur de recherche avec Elastic Search
+
+### Stockage des données
+
+#### Utilisation de MongoDB
+
+Nous avons choisi d'utiliser MongoDB car c'est une base donnée basé sur des fichiers .json et que Scrapy donne directement des fichiers en .json.
+
+

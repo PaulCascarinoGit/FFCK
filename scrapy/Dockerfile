@@ -14,5 +14,5 @@ RUN pip install -r /app/requirements.txt
 WORKDIR /app/WebCrawler/WebCrawler/spiders
 
 # déterminer la commande devant être lancée.
-CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.csv"]
+CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.json"]
 
