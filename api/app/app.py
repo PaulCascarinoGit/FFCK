@@ -8,12 +8,11 @@ db = client['FFCK_BDD']  # Remplacez par le nom de votre base de données
 collection = db['ffck_collection']  # Remplacez par le nom de votre collection
 
 # Récupération de tous les documents dans la collection
-result = collection.find()
+result = collection.find({'Category': 'C'})
 
 # Affichage des résultats
 for document in result:
     print(document)
 
-print('TEST DE TEST DE TEST')
 # Fermeture de la connexion
 client.close()

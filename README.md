@@ -1,4 +1,4 @@
-# Données duu canoë-kayak en France
+# Données du canoë-kayak en France
 Projet de data-engineering réalisé par Paul Cascarino et Mathis Quinio-cosquer
 
 ## Sommaire
@@ -25,6 +25,14 @@ Nous allons travailler sur les données de la Fédération Française de Canoë-
  ### Les objectifs de ce projet
 
  L'objectif de ce projet est d'observer la répartition des athlètes pratiquant le canoë-kayak slalom en France. On pourra observer en fonction des âges, du sexe, de la région des clubs la répartition des athlètes. Cela peut permettre d'axer les études sur le sujet sur des points précis si l'on trouver des corrélations et d'avoir une visualisation plus globale.
+
+
+
+
+## User guide
+
+
+
  
 ## Developperguide
 
@@ -120,29 +128,85 @@ __C:\Users\paulc\Documents\Esiee_Paris\E4\dataengineering\ffck\scrapy\WebCrawler
 __Construction de l'image Docker :__
 
 ```
-    # utilise une image python:3.8  préexistante à partir un autre Dockerfile.
+    # Utilisez l'image de base Python 3.11
     FROM python:3.11
 
-    # définis le répertoire de travail dans le conteneur
+    # Définissez le répertoire de travail dans le conteneur
     WORKDIR /app
 
-    # ajoutes les fichier du dossier courant dans le contexte de Docker.
-    COPY . .
+    # Copiez le fichier requirements.txt du répertoire local vers le répertoire de travail du conteneur
+    COPY ./scrapy/requirements.txt /app/requirements.txt
 
-    # execution des commandes
-    RUN pip install -r /app/requirements.txt
+    # Installez les dépendances Python
+    RUN pip install --no-cache-dir -r requirements.txt
 
-    # définis le répertoire de travail dans le conteneur
+    # Copiez tout le contenu du répertoire local dans le répertoire de travail du conteneur
+    COPY ./scrapy /app
+
     WORKDIR /app/WebCrawler/WebCrawler/spiders
-
-    # déterminer la commande devant être lancée.
-    CMD ["scrapy", "crawl", "classement_ffck", "-o", "output.json"]
+    # Commande par défaut à exécuter lors du démarrage du conteneur
+    CMD ["scrapy", "crawl", "classement_ffck"]
 ```
 - Se mettre dans le répertoire scrapy : ``` cd scrapy```
 - Construction du docker à partir du dockerfile : ```docker build -t dockerfile .```
 
 __Lancement de l'image Docker :__
 -  Lancement de l'image, création du conteneur```docker run dockerfile```
+
+
+### Stockage des données
+
+#### Utilisation de MongoDB
+
+Nous avons choisi d'utiliser MongoDB pour son optimisation sur la mémoire.
+car ous avons une base de données assez conséquentes : environ 3000 athlètes.
+
+Nous utilisons pour plus de facilité l'image docker de mongodb et créons le docker-compose suivant afin de connecter notre scraping à une base de données : 
+
+```
+version: '3'
+
+services:
+  scrapy:
+    build:
+      context: .
+      dockerfile: ./scrapy/dockerfile
+    volumes:
+      - ./scrapy:/app
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: 'mongodb://mongo:27017'
+      MONGO_DATABASE: 'FFCK_BDD'
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  api:
+    build:
+      context: .
+      dockerfile: ./api/dockerfile
+    volumes:
+      - ./api:/app
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: 'mongodb://mongo:27017'
+      MONGO_DATABASE: 'FFCK_BDD'
+```
+
+Ainsi dans notre pipeline et nos settings, nous pouvons créer notre base de données et y ajouter les données propres du scraping.
+
+Nous lançons maintenant notre projet avec sur le répertoire de base du projet: 
+
+```
+docker-compose up --build
+```
+
+### Création du dashboard
+
 
 Consignes
 - Vous devez scraper des données sur le site web de votre choix
@@ -156,17 +220,3 @@ Bonus
 - Utilisation de docker-compose
 - Scraping en temps réel
 - Moteur de recherche avec Elastic Search
-
-### Stockage des données
-
-#### Utilisation de MongoDB
-
-Nous avons choisi d'utiliser MongoDB car c'est une base donnée basé sur des fichiers .json et que Scrapy donne directement des fichiers en .json.
-
-https://www.youtube.com/watch?v=xBbSR7xU2Yw&ab_channel=Randomcode
-
-```
- cd .\mongo\
- docker build -t mongodockerfile -f mongodockerfile .
- docker run --name mongo_container -d mongodockerfile python3 mongo.py
-```
