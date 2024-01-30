@@ -37,7 +37,7 @@ class WebcrawlerPipeline:
         # Nettoyer les valeurs
         for field in item.fields:
             value = item.get(field)
-            if value is not None:
+            if value is not None and not isinstance(value, int) and not isinstance(value, float) :
                 if not value.replace(".", "").replace("-", "").isdigit():
                     item[field] = value.replace('\t', '').replace('\n', '').replace("'", '').strip()
                 else:

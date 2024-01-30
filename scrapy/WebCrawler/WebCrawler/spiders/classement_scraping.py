@@ -11,18 +11,30 @@ class ClassementFfckSpider(scrapy.Spider):
     def parse(self, response):
         for row in response.xpath('//table[@cellpadding="0" and @cellspacing="0"]/tr[@class="paire" or @class="impaire"]'):
             item = athlete()
-            item['Rank'] = row.xpath('td[1]/text()').extract_first()
-            item['Scratch'] = row.xpath('td[2]/text()').extract_first()
-            item['Name'] = row.xpath('td[3]/a/text()').extract_first()
+            item['Rank'] = int(row.xpath('td[1]/text()').extract_first())
+            item['Scratch'] = int(row.xpath('td[2]/text()').extract_first())
+            name = row.xpath('td[3]/a/text()').extract_first()
+            # Diviser la chaîne en fonction de l'espace
+            parts = name.split(" ", 1)
+            # Assigner le prénom et le nom à item
+            if len(parts) >= 2:
+                item['Prenom'] = parts[0]
+                item['Nom'] = parts[1]
+            else:
+                # Gérer le cas où il n'y a qu'un seul mot (prénom sans nom ou vice versa)
+                item['Prenom'] = name
+                item['Nom'] = ""
             item['Club'] = row.xpath('td[4]/a/text()').extract_first()
-            item['Boat'] = row.xpath('td[5]/a/text()').extract_first()
-            item['Category'] = row.xpath('td[6]/a/text()').extract_first()
-            item['Year'] = row.xpath('td[7]/text()').extract_first()
-            item['Division'] = row.xpath('td[8]/@class').extract_first()
-            item['Points_Club'] = row.xpath('td[9]/text()').extract_first()
-            item['Points'] = row.xpath('td[10]/text()').extract_first()
-            item['Num_Courses'] = row.xpath('td[11]/text()').extract_first()
-            item['Courses_Nat'] = row.xpath('td[12]/text()').extract_first()
+            emb_sex =  row.xpath('td[5]/a/text()').extract_first()
+            item['Embarcation'] = emb_sex[0:2]
+            item['Sexe'] =emb_sex[2]
+            item['Categorie'] = row.xpath('td[6]/a/text()').extract_first()
+            item['Annee'] = int(row.xpath('td[7]/text()').extract_first())
+            item['Division'] = row.xpath('td[8]/text()').extract_first()
+            item['Points_Club'] = float(row.xpath('td[9]/text()').extract_first())
+            item['Moyenne'] = float(row.xpath('td[10]/text()').extract_first())
+            item['Nombre_de_courses'] = int(row.xpath('td[11]/text()').extract_first())
+            item['Nombre_de_courses_nationales'] = int(row.xpath('td[12]/text()').extract_first())
 
             yield item
 

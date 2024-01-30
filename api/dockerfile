@@ -6,9 +6,11 @@ COPY ./api/requirements.txt /api/requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+EXPOSE 8050
+
 COPY ./api /api
 
 WORKDIR /api/app
 
 # Ajoutez la commande pour exécuter le script toutes les minutes
-CMD ["sh", "-c", "while :; do python /api/app/app.py; sleep 10; done"]
+CMD ["sh", "-c", "while :; do python /api/app/app.py; sleep 60; done"]

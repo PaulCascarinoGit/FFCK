@@ -207,6 +207,8 @@ docker-compose up --build
 
 ### Création du dashboard
 
+http://127.0.0.1:8050/
+
 
 Consignes
 - Vous devez scraper des données sur le site web de votre choix

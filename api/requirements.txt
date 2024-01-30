@@ -1,2 +1,10 @@
-scrapy
+dash
+dash-bootstrap-components
+pandas
 pymongo
+elasticsearch
+matplotlib
+plotly
+folium
+branca
+pyarrow

@@ -649,27 +649,25 @@ def create_dashboard_dash(collection):
             date (datetime.Date()) : permet de choisir la dataframe en fonction du numéro de semaine de la date
         Return df (df) : Une nouvelle dataframe filtrée     
         """
-        result = collection.find()
-
-
-        #df_good_date = df.get(date)
-        #filter = {}
-        #gender_tab, boat_tab = [], []
-        if selected_gender :
+        # Construction du filtre en fonction des valeurs sélectionnées
+        if selected_gender:
             filter['Sexe'] = selected_gender
-        if selected_boat :  
+        if selected_boat:
             filter['Embarcation'] = selected_boat
-        if selected_categorie :
+        if selected_categorie:
             filter['Categorie'] = selected_categorie
-        if selected_div :
+        if selected_div:
             filter['Division'] = selected_div
-        if selected_age_range is not None and len(selected_age_range) == 2: 
+        if selected_age_range is not None and len(selected_age_range) == 2:
             age_min, age_max = selected_age_range
-            filter['Annee'] = []
-            # La df ne contient que les dates de nécessance, on retire donc l'age à 2023
-            for year in range(2023 - age_max, 2023 - age_min +1) :
-                filter['Annee'].append(year)
-        return layout.filter_df(df_good_date, filter)
+            filter['Annee'] = {"$gte": 2023 - age_max, "$lte": 2023 - age_min}
+
+        # Application du filtre à la requête MongoDB
+        result = collection.find(filter)
+
+        # Convertir le résultat en DataFrame pandas
+        df = pd.DataFrame(list(result))
+        return df
 
     # On run notre Dashboard disponible à l'addresse : http://127.0.0.1:8050/
     app.run_server(debug=True)
