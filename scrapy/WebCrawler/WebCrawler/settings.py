@@ -12,10 +12,10 @@ BOT_NAME = "WebCrawler"
 SPIDER_MODULES = ["WebCrawler.spiders"]
 NEWSPIDER_MODULE = "WebCrawler.spiders"
 MONGO_URI = 'mongodb://mongo:27017'
-MONGO_DATABASE = 'votre_base_de_donnees'
+MONGO_DATABASE = 'FFCK_BDD'
 
 ITEM_PIPELINES = {
-    'votre_projet.pipelines.MongoDBPipeline': 300,
+    'WebCrawler.pipelines.MongoDBPipeline': 300,
 }
 
 

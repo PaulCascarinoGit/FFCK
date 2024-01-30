@@ -17,3 +17,16 @@ services:
     image: mongo
     ports:
       - "27017:27017"
+
+  api:
+    build:
+      context: .
+      dockerfile: ./api/dockerfile
+    volumes:
+      - ./api:/app
+    depends_on:
+      - mongo
+    environment:
+      MONGO_URI: 'mongodb://mongo:27017'
+      MONGO_DATABASE: 'FFCK_BDD'
+    #command: python ./api/app/test.py

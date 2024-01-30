@@ -1,0 +1,14 @@
+FROM python:3.11
+
+WORKDIR /api
+
+COPY ./api/requirements.txt /api/requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY ./api /api
+
+WORKDIR /api/app
+
+# Ajoutez la commande pour exécuter le script toutes les minutes
+CMD ["sh", "-c", "while :; do python /api/app/test.py; sleep 60; done"]
