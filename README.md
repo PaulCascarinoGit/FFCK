@@ -5,7 +5,7 @@ Projet de data-engineering réalisé par Paul Cascarino et Mathis Quinio-cosquer
 1. [Introduction](#introduction)
 2. [User Guide](#userguide)
 3. [Developper Guide](#developperguide)
-4. [Analyse des fonctionnalités](#AAAAA)
+4. [Analyse des fonctionnalités](#Analyse)
 
 
 ## Introduction
@@ -31,6 +31,14 @@ Nous allons travailler sur les données de la Fédération Française de Canoë-
 
 ## User guide
 
+Pour lancer notre dashboard, il suffit de se mettre dans le répertoire du projet et d'effectuer la commande : 
+__docker-compose up --build__
+
+Notre scraping vas commencer ainsi ue le dashboard et la base de données vont être refresh en __temps réel__
+
+Pour accéder au dashboard, ,il suffit de se connecter à l'addresse : http://127.0.0.1:8050/
+
+Le scraping se fait en continue, il faut refresh la page du dashboard pour voir le données en fonction du scraping en temps réel.
 
 
  
@@ -207,18 +215,31 @@ docker-compose up --build
 
 ### Création du dashboard
 
-http://127.0.0.1:8050/
+Nous avons choisi d'utiliser Dash pour sa facilité d'utilisation, sa flexibilité et car il s'intègre très bien avec du Python.
 
 
-Consignes
-- Vous devez scraper des données sur le site web de votre choix
-- Stocker ces données dans une BDD
-- Afficher les données sur un site web avec la techno de votre choix (Flask, Dash, etc...)
-- Les services de votre projet devront tourner sur des container Docker
-- rédiger une documentation technique et fonctionnelle de votre projet (comment le lancer, choix techniques, etc...)
-- Votre projet doit être disponible sur un repository github sur lequel vous nous avez invité à collaborer
+- Assurer vous que le conteneur Mongodb fonctionne et stocke toutes les données
 
-Bonus
-- Utilisation de docker-compose
-- Scraping en temps réel
-- Moteur de recherche avec Elastic Search
+- Se mettre dans le répertoire api ```cd ./api/app```
+
+
+
+__Lancement du Dashboard :__
+
+- Exécution du dashboard avec la commande : ```python app.py```
+- Le tableau de bord sera accessible à l'adresse suivante : http://127.0.0.1:8050/
+
+
+
+Vous pouvez ensuite arrêter Mongodb ```docker-compose down```
+
+### Analyse
+
+#### Trop ambitieux par rapport aux temps et conditions :
+
+Nous avons surestimer l'ampleur du projet et nous avons accumulés des problèmes lors de la transition du dashboard 
+avec docker. Les boutons ainsi que les graphique ne fonctionnait plus comme il devraient et les temps de corrections immenses...
+
+De plus nous voullions effectuer la sélection des données avec des filtres de mongodb mais les erreurs précédentes
+nous ont contraintes de les effectuer avec les dataframe de Pandas, le résultat reste cependant le même car le dataframe est
+actualisé à chaque actuualisation de la page.
