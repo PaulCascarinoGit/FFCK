@@ -6,6 +6,10 @@ class ClassementFfckSpider(scrapy.Spider):
     name = "classement_ffck"
     start_urls = ["http://www.ffcanoe.asso.fr/eau_vive/slalom/classement/embarcations/index",]
     custom_date = "28/01/2023"
+    custom_settings = {
+        'CLOSESPIDER_ITEMCOUNT': 100  # Limiter le spider à 100 items
+    }
+
 
 
     def parse(self, response):

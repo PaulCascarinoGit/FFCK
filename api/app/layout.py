@@ -208,31 +208,6 @@ def give_club_map(df_ranking):
             ).add_to(map)
 
     map.save(outfile='map_club.html')
-    
-
-def give_licence_graph(df):
-    """Donne un graphique de la moyenne en fonction du numéro de licence
-    Args : df (dataframe pandas) : la df que nous traiter pour obtenir le graphique
-    """ 
-    df = df[df['Code_bateau'].str[:3] != 'INV']
-    df['Code_bateau'] = df['Code_bateau'].str[3:]
-    df['Code_bateau'] = df['Code_bateau'].astype('float')
-    df.sort_values(by='Code_bateau', ascending=True)
-    # On supprime la catégorie des C2 et le sexe mixte qui ont un numéro de licence beaucoup plus grand : 
-    df = df[ df['Embarcation'] != 'C2' ]
-    df = df[ df['Sexe'] != 'M' ]
-    trace = go.Scatter( x=df['Code_bateau'],
-                        y=df['Moyenne'],
-                        mode='markers' )
-    
-    data = [trace]
-
-    layout = go.Layout( title='Moyenne en fonction du numéro de licence',
-                        xaxis={'title': 'Numéro de licence'},
-                        yaxis={'title': 'Moyenne'}
-                    )
-    fig = go.Figure(data=data, layout=layout)
-    return fig
 
 def give_ages_graph(df):
     """Donne un graphique de la moyenne en fonction de l'âge de l'année de naissances des athlètes
@@ -271,21 +246,11 @@ def give_tab(df, selection_df) :
     """Retourne un tableau plotly en sélectionnant les colonnes de notre dataframe filtré. 
     On y mets les colonne de la selection en jaune en appliquant des masques spécifiques à la sélection
     """
-    if not selection_df.empty :
-        selection_mask = selection_df['Code_bateau'].isin(df['Code_bateau'])
-        # selection_df = selection_df.drop(['Index','Code_bateau', 'Nombre_de_courses', 'Nombre_de_courses_nationales'], axis = 1)
-        # selection_df = selection_df[[   'Classement', 'Prenom', 'Nom', 'Sexe', 'Embarcation', 
-        #                             'Categorie', 'Annee', 'Division','Club', 'Moyenne' ]]
-    else : 
-        selection_mask = None
-
     # On supprime les colonnes que l'on ne veut pas montrer
-    df = df.drop(['Index','Code_bateau', 'Nombre_de_courses', 'Nombre_de_courses_nationales'], axis = 1)    
-    # On ajoute le classement du filtre
-    df['Classement_tab'] = range(1, len(df) + 1)
+    df = df.drop(['Nombre_de_courses', 'Nombre_de_courses_nationales'], axis = 1)    
     # On échange l'odre pour une meilleure visibilité
-    df = df[[   'Classement','Classement_tab', 'Prenom', 'Nom', 'Sexe', 'Embarcation', 
-                'Categorie', 'Annee', 'Division','Club', 'Moyenne' ]]
+    # df = df[[   'Classement','Classement_tab', 'Prenom', 'Nom', 'Sexe', 'Embarcation', 
+    #             'Categorie', 'Annee', 'Division','Club', 'Moyenne' ]]
     
     
     # Choix des couleurs de chaque ligne 
@@ -293,20 +258,10 @@ def give_tab(df, selection_df) :
     dict_color = { 'H':'#a6bddb' , 'D':'#c994c7', 'Sel': '#fec44f' }
     tab_gender = [[] for _ in range(11)]
     for index, row in df.iterrows():
-        gender = row['Sexe']
-        if selection_mask is not None : 
-            if index in selection_mask.index :
-                for i in range(11):
-                    color = dict_color.get('Sel', 'gray')
-                    tab_gender[i].append(color)
-            else:
-                for i in range(11):
-                    color = dict_color.get(gender, 'gray')
-                    tab_gender[i].append(color)
-        else :
-            for i in range(11):
-                    color = dict_color.get(gender, 'gray')
-                    tab_gender[i].append(color)     
+        gender = row['Sexe']        
+        for i in range(11):
+                color = dict_color.get(gender, 'gray')
+                tab_gender[i].append(color)     
         
 
     fig = go.Figure(

@@ -1,3 +1,4 @@
+from pymongo import MongoClient
 from dash import Dash, html, Output, Input, callback_context
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -5,9 +6,9 @@ import datetime
 import pandas as pd
 
 import layout
-
 from pymongo import MongoClient
-from elasticsearch import Elasticsearch
+
+import time
 
 # Permet de créer un dashboard de présentation des classement du canoe-kayak en France.
 # Utilise Dash et implémente le dashboard à l'addresse : http://127.0.0.1:8050/
@@ -17,15 +18,18 @@ from elasticsearch import Elasticsearch
 #     collection : Nos données de la base de donnéees MangoDB    
 
 
-# Connexion à la base de données MongoDB
-client = MongoClient('mongodb://mongo:27017')
-db = client['FFCK_BDD']  # Remplacez par le nom de votre base de données
-
-# Exemple de récupération de données depuis une collection
-collection = db['ffck_collection']  # Remplacez par le nom de votre collection
-
-
-
+mongo_ready = False
+while not mongo_ready:
+    try:
+        # Try to connect to MongoDB
+        client = MongoClient('mongo:27017', serverSelectionTimeoutMS=30000, socketTimeoutMS=30000, connectTimeoutMS=30000)
+        db = client['FFCK_BDD']
+        collection = db['ffck_collection']
+        mongo_ready = True
+    except Exception as e:
+        print(f"Error connecting to MongoDB: {e}")
+        print("Retrying in 5 seconds...")
+        time.sleep(5)
 
 # On crée la mise en page de notre Dashboard
 # Utilisation du thème Cerulean pour la simplicité et la gamme de couleur autour du bleu (couleur de l'eau)
@@ -34,11 +38,11 @@ external_stylesheets = [dbc.themes.CERULEAN]
 # On supprime les callbacks excpetions car cela nous permets de pouvoir cacher certains éléments
 app = Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)  
 
+
 # Définition de la couche layout de notre dashboard
 # On veux un simplicité tout en ayant quelque chose de beau donc :
 # Utilisation du Dash Bootstrap Components de https://dash.plotly.com/tutorial
 app.layout = dbc.Container([
-
     # Titre, sous-titre et crédit de notre dashboard
     dbc.Row([
         dbc.Col(html.H1('Répartition des athlètes de la FFCK Slalom', className="text-primary text-center fs-1")),
@@ -56,9 +60,9 @@ app.layout = dbc.Container([
 
     html.Hr(),
 
-    # On veux maintenant filtrer nos données
+    # On veux maintenant filtrer notre dataframe
     # On vas donc créer ci-dessous des composants de dash ou de boostrap dash
-    # Afin d'appliquer des filtres dynamiquement sur nos données
+    # Afin d'appliquer des filtres dynamiquement sur notre dataframe
     dbc.Row([
         # Filtrage :
         dbc.Col(
@@ -91,10 +95,15 @@ app.layout = dbc.Container([
                     dbc.Row([
                         dbc.Col(html.Div('Catégorie : ', style={'margin-right': '7px'}), width = 'auto'  ),                       
                         dbc.Col(dbc.Checklist(  options=[   
-                                                    {'label': 'U15', 'value': 'U15'},
-                                                    {'label': 'U18', 'value': 'U18'},
-                                                    {'label': 'U34', 'value': 'U34'},
-                                                    {'label': 'M35', 'value': 'M35'}                                                 
+                                                    {'label': 'Minime', 'value': 'M'},
+                                                    {'label': 'Cadet', 'value': 'C'},
+                                                    {'label': 'Junior', 'value': 'J'},
+                                                    {'label': 'Senior', 'value': 'S'},
+                                                    {'label': 'Veteran 1', 'value': 'V1'},
+                                                    {'label': 'Veteran 2', 'value': 'V2'},
+                                                    {'label': 'Veteran 3', 'value': 'V3'},
+                                                    {'label': 'Veteran 4', 'value': 'V4'},
+                                                    {'label': 'Veteran 5', 'value': 'V5'},                                                
                                                 ], 
                                                 inline=True,
                                                 id = 'categorie-checklist')),
@@ -129,28 +138,28 @@ app.layout = dbc.Container([
                     # Pour plus de simplicité, nous avons décider de prendre le numéro de la semaine
                     # Cela réduit le nombre de données à récupérer
                     # Et comme les courses sont toutes les semaines, cela n'affecte pas le classement de la date
-                    dbc.Col(
-                        html.Div('Sélection du numéro de semaine : '),
+                    # dbc.Col(
+                    #     html.Div('Sélection du numéro de semaine : '),
 
-                    ),
-                    dcc.Slider(
-                        id = 'date-slider',
-                        min = 1,    
-                        max = datetime.date.today().isocalendar()[1],
-                        step = 1,
-                        marks = {mark : str(mark) for mark in range(datetime.date.today().isocalendar()[1]) if mark%5==0},
-                        value = 1,
-                        tooltip = {"placement": "bottom", "always_visible": True},                    
-                    ),
-                    # Boutons de lecture (Play) et de pause (Pause)
-                    dbc.Col([
-                        dbc.Row([
-                            dbc.Button("Play", id="play-button", color="primary", className="mr-2"),
-                            dbc.Button("Pause", id="pause-button", color="danger"),
-                        ], className = 'text-center'
-                        )                            
-                    ]),
-                    html.Hr(),
+                    # ),
+                    # dcc.Slider(
+                    #     id = 'date-slider',
+                    #     min = 1,    
+                    #     max = datetime.date.today().isocalendar()[1],
+                    #     step = 1,
+                    #     marks = {mark : str(mark) for mark in range(datetime.date.today().isocalendar()[1]) if mark%5==0},
+                    #     value = 1,
+                    #     tooltip = {"placement": "bottom", "always_visible": True},                    
+                    # ),
+                    # # Boutons de lecture (Play) et de pause (Pause)
+                    # dbc.Col([
+                    #     dbc.Row([
+                    #         dbc.Button("Play", id="play-button", color="primary", className="mr-2"),
+                    #         dbc.Button("Pause", id="pause-button", color="danger"),
+                    #     ], className = 'text-center'
+                    #     )                            
+                    # ]),
+                    # html.Hr(),
                     # Filtrage des divisions des athlètes
                     dbc.Row([
                         dbc.Col(html.Div('Division : ', style={'margin-right': '7px'}), width = 'auto'  ),                       
@@ -170,29 +179,29 @@ app.layout = dbc.Container([
             # Permet la recherche et donc la mise en avant d'athlète
             # Mettre en avant un athlète permet de changer dans la majorité des cas 
             # les couleurs concernés afin de les rendre plus visibles
-        dbc.Col(
-            dbc.Card(
-                dbc.CardBody([
-                    html.H5('Sélection (mise en avant): ', className = 'card-title'),
-                    dbc.Input(
-                            id = 'name_text',
-                            type = 'text',
-                            placeholder = 'Nom, prénom ou club'
-                    ),
-                    html.Div(id = 'validation_name'),                         
-                ]),
-            ),
-        ), 
+        # dbc.Col(
+        #     dbc.Card(
+        #         dbc.CardBody([
+        #             html.H5('Sélection (mise en avant): ', className = 'card-title'),
+        #             dbc.Input(
+        #                     id = 'name_text',
+        #                     type = 'text',
+        #                     placeholder = 'Nom, prénom ou club'
+        #             ),
+        #             html.Div(id = 'validation_name'),                         
+        #         ]),
+        #     ),
+        # ), 
     ]),# Row de la partie filtrage
     # Permet de gérer le temps et faire défiler notre numéro de la semaine
-    dcc.Interval(
-        id = 'interval-component',
-        interval = 5000,  # en millisecondes
-        n_intervals = 0  # initialisez à zéro
-    ),
-    html.Hr(),
+    # dcc.Interval(
+    #     id = 'interval-component',
+    #     interval = 5000,  # en millisecondes
+    #     n_intervals = 0  # initialisez à zéro
+    # ),
+    # html.Hr(),
 
-    
+
     # Partie sur les layouts de notre dashboard :
     # Pourplus de visibilités, nous voulons cacher les layouts
     # Et permettre de sélectionner les layouts que nous voulons :
@@ -201,83 +210,17 @@ app.layout = dbc.Container([
         dbc.Tab(label='Tableau et statistiques', tab_id='tab-tab'),
         dbc.Tab(label='Histogramme de la moyenne', tab_id='tab-hist'),
         dbc.Tab(label='Carte de la répartition des clubs', tab_id='tab-map'),
-        dbc.Tab(label='Graph des num de licences', tab_id='tab-graph'),
+        #dbc.Tab(label='Graph des num de licences', tab_id='tab-graph'),
         dbc.Tab(label='Graph des âges', tab_id='tab-ages'),
     ]),
     html.Hr(),
     html.Div(id='tab_content')
-    
-
-], fluid=True) # fin de dbc.Containers()
 
 
-# Nous allons maintenant créer les différentes fontions qui permettent de rendre dynamique les éléments
+    ], fluid=True) # fin de dbc.Containers()
 
-# Permet la sélection avec les nom, prénoms ou clubs :
-@app.callback(
-    Output("validation_name", "children"),
-    [   Input('gender-checklist', 'value'), 
-        Input('boat-checklist', 'value'),
-        Input('categorie-checklist', 'value'),
-        Input('age-slider', 'value'),
-        Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
-        Input("name_text", "value"),
-    ]
-)
-def validation_name(    selected_gender, selected_boat, selected_categorie, selected_age_range,
-                        selected_div, selected_date, selected_name ):
-    """Permet de voir si les éléments (les lettres) rentrés dans l'input des sélection
-    permettent de retrouver un ou des noms, prénoms ou clubs en fonction des filtres de la df.
-    Cette fonction va donc retourner une liste des éléments sélectionnés 
-    Args : 
-        selected_gender, selected_boat, selected_categorie, selected_age_range, 
-        selected_div, date = selected_date : permettent de récupérer les donnés du filtre
-        selected_name (str) : les éléments de l'input des sélections
-    Return 
-        list_group (list) : qui permet l'affichage des éléments correspondant (peut être None)
-    """
-    filtered_df =  update_df(   selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                                selected_div, date = selected_date)
-    # On veut retrouver les éléments de la df filtrés en corrélation avec notre input de sélection
-    if selected_name :
-        mask = (
-                filtered_df['Nom'].str.contains(selected_name, case=False, na=False) | 
-                filtered_df['Prenom'].str.contains(selected_name, case=False, na=False) |
-                filtered_df['Club'].str.contains(selected_name, case=False, na=False)
-                )
-        # On réduit notre df à notre sélection pour plus de simplicité
-        filtered_df =  filtered_df[mask]
-    if not filtered_df.empty:
-        # Créez une liste d'éléments dbc.ListGroupItem pour chaque nom
-        name_list = [dbc.ListGroupItem(f"{row['Prenom']} {row['Nom']} {row['Embarcation']}") for index, row in filtered_df.iterrows()]
-
-        # On ceux afficher 5 personnes pour ne pas encombrer notre dashboard :
-        if len(name_list) >= 5 :
-            len_list = len(name_list)
-            name_list = name_list[:4]
-            name_list.append('('+str(len_list)+') athlètes') 
-        # Utilisez dbc.ListGroup pour afficher la liste d'éléments
-        list_group = dbc.ListGroup(name_list)
-
-        return list_group
-    else :
-        return None
-
-# Permet de faire avancer le temps
-@app.callback(
-    Output('date-slider', 'value'),
-    Input('interval-component', 'n_intervals')
-)
-def update_interval(n):
-    """Permet de faire avancer le temps à un intervale de 1 et donc le slider du numéro de la semaine
-    Args : 
-        n (int) : notre numéro de la semaine
-    Return : 
-        n + 1 (int) : le numéro de la semaine suivante
-    """
-    return n + 1
-
+# result = collection.find()
+# df = pd.DataFrame(list(result))
 #  Montre la page de layout sélectionnée
 @app.callback(
     Output('tab_content', 'children'),
@@ -402,54 +345,12 @@ def show_layout(tab):
                         )
                     )
                 )
-    elif tab == 'tab-graph' : 
-        return  dbc.Col([
-                    dcc.Graph(  figure = {},
-                                id = 'licence_points'
-                    ),
-                ])
     elif tab == 'tab-ages' : 
         return  dbc.Col([
                     dcc.Graph(  figure = {},
                                 id = 'ages_points'
                     ),
                 ])
-
-# Permet de faire fonctionner les boutons pour le slider du temps
-@app.callback(
-    Output('interval-component', 'disabled'),
-    Output('play-button', 'disabled'),
-    Output('pause-button', 'disabled'),
-    Input('play-button', 'n_clicks'),
-    Input('pause-button', 'n_clicks'),
-    Input('interval-component', 'n_intervals'),
-    prevent_initial_call=True
-)
-def control_play_pause(play_clicks, pause_clicks, n_intervals):
-    """Permet de controller les boutons pause et stop de notre dashboard 
-    Est utilisé pour la gestion du numéro de la semaine et l'avancement dans le temps
-    Args : 
-        play_clicks : 
-        pause_clicks : 
-        n_intervals : 
-    Return :
-        Les valeurs de play_clicks, pause_clicks, n_intervals
-    """
-    ctx = callback_context
-    if not ctx.triggered:
-        return True, False, False
-
-    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
-    if button_id == 'play-button':
-        return False, True, False
-    elif button_id == 'pause-button':
-        return True, False, True
-    elif n_intervals is None:
-        return True, False, False
-    else:
-        return False, True, False
-    
 
 #  Mise à jour de notre map
 @app.callback(
@@ -459,11 +360,11 @@ def control_play_pause(play_clicks, pause_clicks, n_intervals):
         Input('categorie-checklist', 'value'),
         Input('age-slider', 'value'),
         Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
+        #Input('date-slider', 'value'),
     ]
 )
 def update_map(   selected_gender, selected_boat, selected_categorie, selected_age_range,
-                        selected_div, selected_date):
+                        selected_div):
     """Permet de mettre à jour notre map en mettant à jour notre dataframe suivi de notre map
     Toucher un à filtre (Input) vas automatiquement lancer cette fonction
     Puis cela vas appliquer les filtres sur notre df de base
@@ -474,7 +375,7 @@ def update_map(   selected_gender, selected_boat, selected_categorie, selected_a
     Return (map) : La lecture de la nouvelle map généré par la nouvelle dataframe        
     """
     filtered_df =  update_df(   selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                                selected_div, date = selected_date)
+                                selected_div)
     layout.give_club_map(filtered_df)
     return open('map_club.html', 'r').read()
 
@@ -488,14 +389,13 @@ def update_map(   selected_gender, selected_boat, selected_categorie, selected_a
         Input('categorie-checklist', 'value'),
         Input('age-slider', 'value'),
         Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
         Input('hist_stack', 'value'),
         Input('hist-slider', 'value'),
 
     ]
 )
 def update_histogram(   selected_gender, selected_boat, selected_categorie, selected_age_range,
-                        selected_div, selected_date, stack, slider):
+                        selected_div, stack, slider):
     """Permet de mettre à jour notre histogramme en mettant à jour notre dataframe suivi de notre histogramme
     Toucher un à filtre (Input) vas automatiquement lancer cette fonction
     Puis cela vas appliquer les filtres sur notre df de base
@@ -508,41 +408,13 @@ def update_histogram(   selected_gender, selected_boat, selected_categorie, sele
     Return fig (fig) : L'histogramme généré avec le dataframe filtré       
     """
     filtered_df =  update_df(   selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                                selected_div, date = selected_date,)
+                                selected_div)
     final_filtered_df = layout.give_division_list(filtered_df)
     if not stack : 
         stack = None
     else: 
         stack =stack[0]
     fig = layout.give_division_hist(final_filtered_df, stack, slider)
-    return fig
-
-#  Mise à jour de notre graphique des licences
-@app.callback(
-    Output('licence_points', 'figure'),
-    [   Input('gender-checklist', 'value'), 
-        Input('boat-checklist', 'value'),
-        Input('categorie-checklist', 'value'),
-        Input('age-slider', 'value'),
-        Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
-
-    ]
-)
-def update_licence(   selected_gender, selected_boat, selected_categorie, selected_age_range,
-                        selected_div, selected_date):
-    """Permet de mettre à jour notre graphique des licences en mettant à jour notre dataframe suivi de notre graph
-    Toucher un à filtre (Input) vas automatiquement lancer cette fonction
-    Puis cela vas appliquer les filtres sur notre df de base
-    Afin d'appliquer notre fonction qui génère un graph en fonction du df sélectionné
-    Args : 
-        selected_gender, selected_boat, selected_categorie, selected_age_range,
-        selected_div, selected_date : permettent de récupérer les données des filtres
-    Return fig (fig) : Le graph des licences généré avec le dataframe filtré       
-    """
-    filtered_df =  update_df(   selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                                selected_div, date = selected_date)
-    fig = layout.give_licence_graph(filtered_df)
     return fig
 
 
@@ -554,12 +426,10 @@ def update_licence(   selected_gender, selected_boat, selected_categorie, select
         Input('categorie-checklist', 'value'),
         Input('age-slider', 'value'),
         Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
-
     ]
 )
 def update_age( selected_gender, selected_boat, selected_categorie, selected_age_range,
-                selected_div, selected_date):
+                selected_div):
     """Permet de mettre à jour notre graphique des âges en mettant à jour notre dataframe suivi de notre graph
     Toucher un à filtre (Input) vas automatiquement lancer cette fonction
     Puis cela vas appliquer les filtres sur notre df de base
@@ -570,7 +440,7 @@ def update_age( selected_gender, selected_boat, selected_categorie, selected_age
     Return fig (fig) : Le graph des âges généré avec le dataframe filtré       
     """
     filtered_df =  update_df(   selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                                selected_div, date = selected_date)
+                                selected_div)
     fig = layout.give_ages_graph(filtered_df)
     return fig
 
@@ -592,12 +462,10 @@ def update_age( selected_gender, selected_boat, selected_categorie, selected_age
         Input('categorie-checklist', 'value'),
         Input('age-slider', 'value'),
         Input('division-checklist', 'value'),
-        Input('date-slider', 'value'),
-        Input('name_text', 'value'),
     ]
 )
 def update_tab(selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                selected_div, selected_date, validation_name):
+                selected_div,):
     """Permet de mettre à jour notre tableau en mettant à jour notre dataframe suivi de notre tableau
     Toucher un à filtre (Input) vas automatiquement lancer cette fonction
     Puis cela vas appliquer les filtres sur notre df de base
@@ -608,37 +476,25 @@ def update_tab(selected_gender, selected_boat, selected_categorie, selected_age_
     Return data (dict) : Les valeurs du tableaux généré avec le dataframe filtré       
     """
     filtered_df = update_df(selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                            selected_div, date = selected_date)
-    if validation_name :
-        selection_df = give_selection_df(filtered_df, validation_name)
-    else : 
-        selection_df = pd.DataFrame()
+                            selected_div)
+
 
     # Mise à jour des figures pour les graphiques
-    sexe_bar = layout.generate_bar(filtered_df, selection_df,'Sexe')
-    embarcation_bar = layout.generate_bar(filtered_df, selection_df,'Embarcation')
-    cate_bar = layout.generate_bar(filtered_df, selection_df, 'Categorie')
-    division_bar = layout.generate_bar(filtered_df, selection_df, 'Division')
+    sexe_bar = layout.generate_bar(filtered_df,'Sexe')
+    embarcation_bar = layout.generate_bar(filtered_df,'Embarcation')
+    cate_bar = layout.generate_bar(filtered_df, 'Categorie')
+    division_bar = layout.generate_bar(filtered_df, 'Division')
 
     nbr_bar = str(filtered_df.shape[0])
     annee_bar = str(round(filtered_df['Annee'].mean(),3))
     moyenne_bar = str(round(filtered_df['Moyenne'].mean(),3))
-    return [layout.give_tab(filtered_df, selection_df),  nbr_bar, 
+    return [layout.give_tab(filtered_df),  nbr_bar, 
             sexe_bar, embarcation_bar, cate_bar, annee_bar, division_bar, 
-            moyenne_bar]
-    
+            moyenne_bar]   
 
-def give_selection_df(filtered_df, validation_name) :
-    mask = (
-        filtered_df['Nom'].str.contains(validation_name, case=False, na=False) | 
-        filtered_df['Prenom'].str.contains(validation_name, case=False, na=False) |
-        filtered_df['Club'].str.contains(validation_name, case=False, na=False)
-    )
-    filtered_df =  filtered_df[mask]
-    return filtered_df
 
 def update_df(selected_gender, selected_boat, selected_categorie, selected_age_range, 
-                selected_div, date = 1):
+                selected_div):
     """Permet d'appliquer les filtres mis en paramètres sur la df actuelle
     Cela permet donc de gérer dynamiquement nos layout 
     Avec une gestion dynamique des filtres de notre df
@@ -648,36 +504,36 @@ def update_df(selected_gender, selected_boat, selected_categorie, selected_age_r
         date (datetime.Date()) : permet de choisir la dataframe en fonction du numéro de semaine de la date
     Return df (df) : Une nouvelle dataframe filtrée     
     """
-    filter={}
-    # Construction du filtre en fonction des valeurs sélectionnées
-    if selected_gender:
+    filter = {}
+
+    if selected_gender :
         filter['Sexe'] = selected_gender
-    if selected_boat:
-        filter['Embarcation'] = selected_boat
-    if selected_categorie:
-        filter['Categorie'] = selected_categorie
-    if selected_div:
-        filter['Division'] = selected_div
-    if selected_age_range is not None and len(selected_age_range) == 2:
-        age_min, age_max = selected_age_range
-        filter['Annee'] = {"$gte": 2023 - age_max, "$lte": 2023 - age_min}
+    # if selected_boat :  
+    #     filter['Embarcation'] = selected_boat
+    # if selected_categorie :
+    #     filter['Categorie'] = selected_categorie
+    # if selected_div :
+    #     filter['Division'] = selected_div
+    # if selected_age_range is not None and len(selected_age_range) == 2:
+    #     age_min, age_max = selected_age_range
+    #     filter['Annee'] = {"$gte": 2023 - age_max, "$lte": 2023 - age_min}
+    
+    if filter == {}:
+        result = collection.find()
+    else : 
+        result = collection.find(filter)
+    print('filter : ')
+    print(filter)
 
-    # Application du filtre à la requête MongoDB
-    result = collection.find(filter)
-
-    # Convertir le résultat en DataFrame pandas
     df = pd.DataFrame(list(result))
+    print('Result : ')
+    print(str(df))
 
-    print(df.head())
     return df
-
-
-# Crée le dashboard
-#create_dashboard_dash(collection)
 
 if __name__ == '__main__':
     # Exécutez le serveur Dash et obtenez l'objet Flask
     server = app.run_server(host='0.0.0.0', port=8050, debug=True, use_reloader=False)
-    
+
     # Personnalisez le message d'accueil
     print(f"Dash is running on http://127.0.0.1:{server.port}/")

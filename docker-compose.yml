@@ -31,4 +31,4 @@ services:
       MONGO_DATABASE: 'FFCK_BDD'
     ports:
       - "8050:8050"
-    #command: python ./api/app/test.py
+    command: python app.py

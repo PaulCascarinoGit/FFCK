@@ -13,4 +13,4 @@ COPY ./api /api
 WORKDIR /api/app
 
 # Ajoutez la commande pour exécuter le script toutes les minutes
-CMD ["sh", "-c", "while :; do python /api/app/app.py; sleep 60; done"]
+CMD ["sh", "-c", "while true; do python /api/app/app.py"]
