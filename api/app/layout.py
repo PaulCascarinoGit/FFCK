@@ -318,7 +318,7 @@ def generate_bar(df, selection_df, column_name, dict_color=None, width=300, heig
     column_counts = df[column_name].value_counts()
     fig = px.pie(df, values=column_counts.values, names=column_counts.index)
 
-    if not selection_df.empty:
+    if not selection_df is None:
         selection = selection_df[column_name].unique()
         if dict_color is None:
             dict_color = {}

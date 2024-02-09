@@ -7,7 +7,7 @@ class ClassementFfckSpider(scrapy.Spider):
     start_urls = ["http://www.ffcanoe.asso.fr/eau_vive/slalom/classement/embarcations/index",]
     custom_date = "28/01/2023"
     custom_settings = {
-        'CLOSESPIDER_ITEMCOUNT': 100  # Limiter le spider à 100 items
+        'CLOSESPIDER_ITEMCOUNT': 3000  # Limiter le spider à 3000 items
     }
 
 

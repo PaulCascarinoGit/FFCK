@@ -18,18 +18,7 @@ import time
 #     collection : Nos données de la base de donnéees MangoDB    
 
 
-mongo_ready = False
-while not mongo_ready:
-    try:
-        # Try to connect to MongoDB
-        client = MongoClient('mongo:27017', serverSelectionTimeoutMS=30000, socketTimeoutMS=30000, connectTimeoutMS=30000)
-        db = client['FFCK_BDD']
-        collection = db['ffck_collection']
-        mongo_ready = True
-    except Exception as e:
-        print(f"Error connecting to MongoDB: {e}")
-        print("Retrying in 5 seconds...")
-        time.sleep(5)
+
 
 # On crée la mise en page de notre Dashboard
 # Utilisation du thème Cerulean pour la simplicité et la gamme de couleur autour du bleu (couleur de l'eau)
@@ -76,6 +65,7 @@ app.layout = dbc.Container([
                                                             {'label': 'Femme', 'value': 'D'}], 
                                                 inline=True,
                                                 id = 'gender-checklist',
+                                                value=['H', 'D'] 
                                             )),
                     ]),
 
@@ -88,6 +78,7 @@ app.layout = dbc.Container([
                                                             {'label': 'C2', 'value': 'C2'}], 
                                                 inline = True,
                                                 id = 'boat-checklist',
+                                                value=['C1', 'K1', 'C2']
                                             )),
                     ]),
                     html.Hr(),
@@ -106,7 +97,8 @@ app.layout = dbc.Container([
                                                     {'label': 'Veteran 5', 'value': 'V5'},                                                
                                                 ], 
                                                 inline=True,
-                                                id = 'categorie-checklist')),
+                                                id = 'categorie-checklist',
+                                                value=['M', 'C', 'J', 'S', 'V1', 'V2', 'V3', 'V4', 'V5'] )),
                     ]),
                     html.Hr(),
                     # Filtrage de l'âge des athlètes
@@ -134,32 +126,7 @@ app.layout = dbc.Container([
             dbc.Card(
                 dbc.CardBody([
                     html.H5('Filtrage :', className='card-title'),
-                    # Filtrage de la date de la dataframe
-                    # Pour plus de simplicité, nous avons décider de prendre le numéro de la semaine
-                    # Cela réduit le nombre de données à récupérer
-                    # Et comme les courses sont toutes les semaines, cela n'affecte pas le classement de la date
-                    # dbc.Col(
-                    #     html.Div('Sélection du numéro de semaine : '),
-
-                    # ),
-                    # dcc.Slider(
-                    #     id = 'date-slider',
-                    #     min = 1,    
-                    #     max = datetime.date.today().isocalendar()[1],
-                    #     step = 1,
-                    #     marks = {mark : str(mark) for mark in range(datetime.date.today().isocalendar()[1]) if mark%5==0},
-                    #     value = 1,
-                    #     tooltip = {"placement": "bottom", "always_visible": True},                    
-                    # ),
-                    # # Boutons de lecture (Play) et de pause (Pause)
-                    # dbc.Col([
-                    #     dbc.Row([
-                    #         dbc.Button("Play", id="play-button", color="primary", className="mr-2"),
-                    #         dbc.Button("Pause", id="pause-button", color="danger"),
-                    #     ], className = 'text-center'
-                    #     )                            
-                    # ]),
-                    # html.Hr(),
+                    
                     # Filtrage des divisions des athlètes
                     dbc.Row([
                         dbc.Col(html.Div('Division : ', style={'margin-right': '7px'}), width = 'auto'  ),                       
@@ -169,37 +136,16 @@ app.layout = dbc.Container([
                                                     {'label': 'Reg', 'value': 'Reg'}                                                 
                                                 ], 
                                         inline=True,
-                                        id = 'division-checklist')),
+                                        id = 'division-checklist',
+                                        value=['N1', 'N2', 'N3', 'Reg'])),
                     ]),
 
                 ]),
             ),
         ), 
 
-            # Permet la recherche et donc la mise en avant d'athlète
-            # Mettre en avant un athlète permet de changer dans la majorité des cas 
-            # les couleurs concernés afin de les rendre plus visibles
-        # dbc.Col(
-        #     dbc.Card(
-        #         dbc.CardBody([
-        #             html.H5('Sélection (mise en avant): ', className = 'card-title'),
-        #             dbc.Input(
-        #                     id = 'name_text',
-        #                     type = 'text',
-        #                     placeholder = 'Nom, prénom ou club'
-        #             ),
-        #             html.Div(id = 'validation_name'),                         
-        #         ]),
-        #     ),
-        # ), 
     ]),# Row de la partie filtrage
-    # Permet de gérer le temps et faire défiler notre numéro de la semaine
-    # dcc.Interval(
-    #     id = 'interval-component',
-    #     interval = 5000,  # en millisecondes
-    #     n_intervals = 0  # initialisez à zéro
-    # ),
-    # html.Hr(),
+    
 
 
     # Partie sur les layouts de notre dashboard :
@@ -477,20 +423,27 @@ def update_tab(selected_gender, selected_boat, selected_categorie, selected_age_
     """
     filtered_df = update_df(selected_gender, selected_boat, selected_categorie, selected_age_range, 
                             selected_div)
-
+    sel_df = None
 
     # Mise à jour des figures pour les graphiques
-    sexe_bar = layout.generate_bar(filtered_df,'Sexe')
-    embarcation_bar = layout.generate_bar(filtered_df,'Embarcation')
-    cate_bar = layout.generate_bar(filtered_df, 'Categorie')
-    division_bar = layout.generate_bar(filtered_df, 'Division')
+    sexe_bar = layout.generate_bar(filtered_df,sel_df,'Sexe')
+    embarcation_bar = layout.generate_bar(filtered_df,sel_df,'Embarcation')
+    cate_bar = layout.generate_bar(filtered_df,sel_df, 'Categorie')
+    division_bar = layout.generate_bar(filtered_df,sel_df, 'Division')
 
     nbr_bar = str(filtered_df.shape[0])
     annee_bar = str(round(filtered_df['Annee'].mean(),3))
     moyenne_bar = str(round(filtered_df['Moyenne'].mean(),3))
-    return [layout.give_tab(filtered_df),  nbr_bar, 
-            sexe_bar, embarcation_bar, cate_bar, annee_bar, division_bar, 
-            moyenne_bar]   
+
+    # Extraction des informations de la figure pour rendre la sortie sérialisable en JSON
+    sexe_bar_json = sexe_bar.to_json()
+    embarcation_bar_json = embarcation_bar.to_json()
+    cate_bar_json = cate_bar.to_json()
+    division_bar_json = division_bar.to_json()
+
+    return [layout.give_tab(filtered_df, sel_df),  nbr_bar, 
+            sexe_bar_json, embarcation_bar_json, cate_bar_json, annee_bar, division_bar_json, 
+            moyenne_bar]  
 
 
 def update_df(selected_gender, selected_boat, selected_categorie, selected_age_range, 
@@ -504,36 +457,64 @@ def update_df(selected_gender, selected_boat, selected_categorie, selected_age_r
         date (datetime.Date()) : permet de choisir la dataframe en fonction du numéro de semaine de la date
     Return df (df) : Une nouvelle dataframe filtrée     
     """
+
+    # Récupère dynamiquement le dataframe dans la bdd mongo
+    result = collection.find()
+    df = pd.DataFrame(list(result))
     filter = {}
 
     if selected_gender :
         filter['Sexe'] = selected_gender
-    # if selected_boat :  
-    #     filter['Embarcation'] = selected_boat
-    # if selected_categorie :
-    #     filter['Categorie'] = selected_categorie
-    # if selected_div :
-    #     filter['Division'] = selected_div
-    # if selected_age_range is not None and len(selected_age_range) == 2:
-    #     age_min, age_max = selected_age_range
-    #     filter['Annee'] = {"$gte": 2023 - age_max, "$lte": 2023 - age_min}
-    
-    if filter == {}:
-        result = collection.find()
-    else : 
-        result = collection.find(filter)
-    print('filter : ')
-    print(filter)
+    if selected_boat :  
+        filter['Embarcation'] = selected_boat
+    if selected_categorie :
+        filter['Categorie'] = selected_categorie
+    if selected_div :
+        filter['Division'] = selected_div
+    if selected_age_range is not None and len(selected_age_range) == 2:
+        age_min, age_max = selected_age_range
+        filter['Annee'] = {"$gte": 2023 - age_max, "$lte": 2023 - age_min} 
 
-    df = pd.DataFrame(list(result))
-    print('Result : ')
-    print(str(df))
-
+    #return layout.filter_df(df,filter)
     return df
 
-if __name__ == '__main__':
-    # Exécutez le serveur Dash et obtenez l'objet Flask
+
+def run_dash_server():
+    # Lancer le serveur Dash
     server = app.run_server(host='0.0.0.0', port=8050, debug=True, use_reloader=False)
 
+
+if __name__ == '__main__':
+
+    mongo_ready = False
+    while not mongo_ready:
+        try:
+            # Try to connect to MongoDB
+            client = MongoClient('mongo:27017', serverSelectionTimeoutMS=30000, socketTimeoutMS=30000, connectTimeoutMS=30000)
+            db = client['FFCK_BDD']
+            collection = db['ffck_collection']
+            mongo_ready = True
+        except Exception as e:
+            print(f"Error connecting to MongoDB: {e}")
+            print("Retrying in 5 seconds...")
+            time.sleep(5)
+ 
+    # df = None
+    # while df is None:
+    #     result = collection.find()
+    #     df = pd.DataFrame(list(result))
+    #     filter = {}
+    #     filter['Sexe'] = 'H'
+    #     print("attendre")
+    #     time.sleep(5)
+    # print('df : ')
+    # print(df.columns)
+    # print('layout: ')
+    # df_bis = layout.filter_df(df,filter)
+    # print(df_bis['Sexe'])
+
+    run_dash_server()
+        
     # Personnalisez le message d'accueil
-    print(f"Dash is running on http://127.0.0.1:{server.port}/")
+
+
